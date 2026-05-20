@@ -34,13 +34,14 @@ docker build -t rss-class-actions .
 docker run -d --name rss-class-actions --restart unless-stopped \
   -e DISCORD_WEBHOOK_URL="$DISCORD_WEBHOOK_URL" \
   -e BACKLOG=0 \
+  -e POLL_INTERVAL=15 \
   -v "$PWD/data:/data" \
   rss-class-actions
 ```
 
 ## Behavior
 
-- Polls every 15 minutes. All feeds are fetched in parallel each cycle.
+- Polls every `POLL_INTERVAL` minutes, defaulting to 15 minutes. All feeds are fetched in parallel each cycle.
 - On first encounter of a feed (whether on initial startup or when a feed is added to `feeds.yaml` later), every entry currently visible in that feed is silently marked as seen. The daemon only posts items that appear AFTER it starts watching.
 - `BACKLOG` only fires on the **first cycle after daemon startup**. If > 0, it posts the N newest items across all feeds regardless of seen state — handy for a recap on restart. Subsequent cycles ignore it and do a normal diff. `BACKLOG=0` (default) skips it entirely.
 - State lives in `seen.db` (gitignored). Inspect with `sqlite3 seen.db`. Delete it to re-trigger first-encounter behavior for every feed.
@@ -50,13 +51,14 @@ docker run -d --name rss-class-actions --restart unless-stopped \
 
 - `DISCORD_WEBHOOK_URL` (required) — where posts go.
 - `BACKLOG` (default `0`) — count of newest items to post on the cycle where feeds are first-encountered, drawn across the whole pool.
+- `POLL_INTERVAL` (default `15`) — minutes to wait between feed polling cycles.
 
 ## Files
 
 - `run.py` — the daemon
 - `feeds.yaml` — feed list (name + url)
 - `seen.db` — SQLite state (`seen(feed_url, guid, posted_at)`); inspect with `sqlite3 seen.db`
-- `.env` — `DISCORD_WEBHOOK_URL`, `BACKLOG`
+- `.env` — `DISCORD_WEBHOOK_URL`, `BACKLOG`, `POLL_INTERVAL`
 - `Dockerfile`, `docker-compose.yml` — container deployment
 
 ## Sources - WIP

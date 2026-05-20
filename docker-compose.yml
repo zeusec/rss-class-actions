@@ -7,5 +7,6 @@ services:
     environment:
       DISCORD_WEBHOOK_URL: ${DISCORD_WEBHOOK_URL}
       BACKLOG: ${BACKLOG:-0}
+      POLL_INTERVAL: ${POLL_INTERVAL:-15}
     volumes:
       - ./data:/data

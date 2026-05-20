@@ -4,7 +4,6 @@ seen.db
 seen.db-journal
 seen.db-wal
 seen.db-shm
-.firecrawl/
 .venv/
 __pycache__/
 *.pyc

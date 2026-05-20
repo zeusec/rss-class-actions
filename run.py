@@ -21,7 +21,7 @@ FEEDS_FILE = REPO / "feeds.yaml"
 DB_FILE = Path(os.environ.get("DB_FILE") or REPO / "seen.db")
 AVATAR_FILE = REPO / "gavel.png"
 WEBHOOK_NAME = "Class Action Alert"
-POLL_INTERVAL = 900
+DEFAULT_POLL_INTERVAL_MINUTES = 15
 HTTP_TIMEOUT = 30
 USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.3"
 EPOCH = time.struct_time((1970, 1, 1, 0, 0, 0, 0, 1, 0))
@@ -145,17 +145,21 @@ def main():
     load_dotenv(REPO / ".env")
     webhook = os.environ.get("DISCORD_WEBHOOK_URL") or sys.exit("DISCORD_WEBHOOK_URL not set")
     backlog = int(os.environ.get("BACKLOG") or 0)
+    poll_interval_minutes = int(os.environ.get("POLL_INTERVAL") or DEFAULT_POLL_INTERVAL_MINUTES)
+    if poll_interval_minutes < 1:
+        sys.exit("POLL_INTERVAL must be >= 1 minute")
+    poll_interval_seconds = poll_interval_minutes * 60
     signal.signal(signal.SIGTERM, _stop)
     signal.signal(signal.SIGINT, _stop)
     with open(FEEDS_FILE) as f:
         feeds = yaml.safe_load(f) or []
     conn = open_db()
     set_webhook_identity(webhook)
-    log.info("starting: %d feeds, backlog=%d", len(feeds), backlog)
+    log.info("starting: %d feeds, backlog=%d, poll_interval=%dm", len(feeds), backlog, poll_interval_minutes)
     while _running:
         poll_once(conn, feeds, webhook, backlog)
         backlog = 0
-        for _ in range(POLL_INTERVAL):
+        for _ in range(poll_interval_seconds):
             if not _running:
                 break
             time.sleep(1)
