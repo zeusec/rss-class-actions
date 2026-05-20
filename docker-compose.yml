@@ -1,0 +1,11 @@
+services:
+  rss-class-actions:
+    build: .
+    image: rss-class-actions
+    container_name: rss-class-actions
+    restart: unless-stopped
+    environment:
+      DISCORD_WEBHOOK_URL: ${DISCORD_WEBHOOK_URL}
+      BACKLOG: ${BACKLOG:-0}
+    volumes:
+      - ./data:/data
